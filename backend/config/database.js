@@ -1,9 +1,14 @@
 const mongoose = require("mongoose");
 
-try{
-    mongoose.connect("mongodb+srv://elifors:111121@cluster0.mpuy7t7.mongodb.net/?appName=Cluster0");
-  console.log("Database connected succesfully ✅")
+const connectDB = async () => {
+  try{
+   await mongoose.connect(process.env.MONGO_URI);
+   console.log("Database connected succesfully ✅");
+  }
+  catch (err) {
+    console.log("database not connected! ❌");
+    console.log(err.message);
+  }
 }
-catch (err) {
-    console.log("database not connected!")
-}
+
+module.exports = connectDB;
