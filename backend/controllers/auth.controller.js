@@ -38,3 +38,31 @@ export const register = async (req,res) => {
         res.status(500).json({message: "Kullanıcı oluşturulurken hata oluştu", error:error.message})
     }
 };
+
+//Login
+export const login = async (req,res) => {
+    const { email, password } = req.body;
+
+    try{
+        const user = await User.findOne({email});
+        if(!user) return res.status(404).json({message:"Kullanıcı bulanamadı!"})
+
+        const isPasswordCorrect = await bcrypt.compare(password,user.password);
+        if(!isPasswordCorrect) return res.status(401).json({message:"Şifre hatalı!"})
+        
+            
+    }
+};
+
+
+
+/* Kullanıcı email + password gönderir✅
+Backend email’e göre kullanıcıyı bulur✅
+Kullanıcı yoksa → “Email veya şifre hatalı” dön✅
+Kullanıcı varsa bcrypt.compare ile şifreyi kontrol et
+Şifre yanlışsa → yine aynı hata
+Şifre doğruysa:
+JWT token oluştur
+Şifresiz user objesi oluştur
+{ user, token } döndür
+Bu akışı defterine mutlaka yaz. */
