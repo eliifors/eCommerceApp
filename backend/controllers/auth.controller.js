@@ -7,6 +7,12 @@ export const register = async (req,res) => {
     const {name, email, password} = req.body;
 
     try {
+        if(!name || !email || !password){
+            return res.status(400).json({message: "Tüm alanları doldurunuz!"});
+        }
+        if( password.length < 6 || password.length > 20){
+            return res.status(400).json({message: "Şifre 6-20 karakter uzunluğunda olmalıdır!"})        
+        }
 
         const existingUser = await User.findOne({email});
         if (existingUser){
@@ -15,11 +21,15 @@ export const register = async (req,res) => {
 
         const hashedPassword = await bcrypt.hash(password,10)
         
-        const newUser = await User.create({name, email, password: hashedPassword});
+        const newUser = await User.create({
+            name,
+            email, 
+            password: hashedPassword
+        });
 
 
         const token = jwt.sign(
-            {userId: newUser._id},
+            {userId: newUser._id, role: newUser.role},
             process.env.JWT_SECRET,
             {expiresIn:"7d"}
         );
@@ -48,21 +58,24 @@ export const login = async (req,res) => {
         if(!user) return res.status(404).json({message:"Kullanıcı bulanamadı!"})
 
         const isPasswordCorrect = await bcrypt.compare(password,user.password);
-        if(!isPasswordCorrect) return res.status(401).json({message:"Şifre hatalı!"})
+        if(!isPasswordCorrect) return res.status(401).json({message:"Geçersiz Şifre!"})
         
-            
+        const token = jwt.sign(
+            {userId: user._id, role: user.role},
+            process.env.JWT_SECRET,
+            {expiresIn: "365d"}
+        );
+
+        const {password: _, ...userData} = user.toObject();
+
+        res.status(200).json({
+            message: "Giriş Başarılı",
+            token,
+            user: userData
+        });
+    }catch(error){
+        console.error("Login hatası:",error.message);
+        res.status(500).json({message: "Sunucu Hatası", error:error.message})
     }
 };
 
-
-
-/* Kullanıcı email + password gönderir✅
-Backend email’e göre kullanıcıyı bulur✅
-Kullanıcı yoksa → “Email veya şifre hatalı” dön✅
-Kullanıcı varsa bcrypt.compare ile şifreyi kontrol et
-Şifre yanlışsa → yine aynı hata
-Şifre doğruysa:
-JWT token oluştur
-Şifresiz user objesi oluştur
-{ user, token } döndür
-Bu akışı defterine mutlaka yaz. */
