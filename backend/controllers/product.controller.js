@@ -39,13 +39,46 @@ export const postAddProduct = async (req, res) => {
     }
 };
 
+//Admin ürün güncelleme
+export const updateProduct = async (req, res) => {
+
+    const productId = req.params.id;
+
+    try{
+        const product = await Product.findByIdAndUpdate(
+            productId,
+            req.body,
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+        if(!product){
+            return res.status(404).json({message:"Güncellenecek ürün bulunamadı"});
+        }
+        res.status(201).json({message:"Ürün başarıyla güncellendi", data:product})
+    }
+    catch (error) {
+        res.status(400).json({message: "Ürün güncelleme başarısız.", error: error.message });
+    }
+;}
+
+//Admin ürün silme
+export const deleteProuct = async (req, res) => {
+
+    const productId = req.params.id;
+
+    try{
+        const product = await Product.findByIdAndDelete(productId);
+
+         if(!product){
+            return res.status(404).json({message:"Silenecek ürün bulunamadı"});
+        }
+        res.status(201).json({message:"Ürün başarıyla silindi", data:product})
+    }
+    catch (error) {
+        res.status(400).json({message: "Ürün silinirken sunucu hatası oluştu.", error: error.message });
+    }
+} 
 
 
-
-
-
-/* 
-POST /api/products → Yeni ürün ekleme (admin)
-PUT /api/products/:id → Ürün güncelleme (admin)
-DELETE /api/products/:id → Ürün silme (admin)
- */
